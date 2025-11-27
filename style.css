@@ -97,6 +97,51 @@ body {
     color: var(--color-resistance);
 }
 
+/* Triangle View */
+.triangle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    height: 150px;
+}
+
+.ohm-triangle {
+    height: 100%;
+    overflow: visible;
+}
+
+.ohm-triangle text {
+    font-family: 'Barlow', sans-serif;
+    font-weight: bold;
+    /* Font size will be set by JS */
+}
+
+/* Toggle Button */
+.view-toggle-container {
+    margin-bottom: 10px;
+}
+
+.btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn:hover {
+    background-color: #555;
+}
+
+.hidden {
+    display: none !important;
+}
+
 /* Simulation Area */
 .simulation-area {
     display: flex;

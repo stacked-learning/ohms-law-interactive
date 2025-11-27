@@ -20,8 +20,13 @@
         <div class="header-spacer"></div>
     </header>
     <div class="main-container">
+        <!-- View Toggle -->
+        <div class="view-toggle-container">
+            <button id="view-toggle-btn" class="btn">Switch to Triangle View</button>
+        </div>
+
         <!-- Equation Display -->
-        <div class="equation-container">
+        <div class="equation-container" id="equation-view">
             <div class="equation-part">
                 <span id="voltage-label" class="variable voltage">V</span>
             </div>
@@ -32,6 +37,51 @@
             <div class="equation-part">
                 <span id="resistance-label" class="variable resistance">R</span>
             </div>
+        </div>
+
+        <!-- Triangle Display (Hidden by default) -->
+        <div class="triangle-container hidden" id="triangle-view">
+            <svg viewBox="0 0 200 180" class="ohm-triangle">
+                <!-- Triangle Backgrounds -->
+                <!-- Top (V) - Yellow -->
+                <path d="M 100 10 L 190 170 L 10 170 Z" fill="none" stroke="black" stroke-width="4" />
+                
+                <!-- Split into 3 sections -->
+                <!-- Top Section (V) -->
+                <path d="M 100 10 L 145 90 L 55 90 Z" fill="#ffffcc" stroke="black" stroke-width="2" />
+                <!-- Actually, let's draw the lines properly.
+                     Triangle vertices: Top(100, 10), BottomRight(190, 170), BottomLeft(10, 170).
+                     Midpoints for horizontal divider: Left(55, 90), Right(145, 90).
+                     Vertical divider: From (100, 90) to (100, 170).
+                -->
+                <path d="M 100 10 L 190 170 L 10 170 Z" fill="none" stroke="black" stroke-width="5" />
+                
+                <!-- Top Area (V) -->
+                <path d="M 100 10 L 190 170 L 10 170 Z" fill="none" /> <!-- Clip path maybe? No, just draw shapes -->
+                
+                <!-- Let's use paths for the filled areas -->
+                <!-- Top (V) -->
+                <path d="M 100 13 L 142 88 L 58 88 Z" fill="#ffffcc" stroke="none" />
+                
+                <!-- Bottom Left (I) -->
+                <path d="M 55 92 L 98 92 L 98 167 L 13 167 Z" fill="#ffcccc" stroke="none" />
+                
+                <!-- Bottom Right (R) -->
+                <path d="M 102 92 L 145 92 L 187 167 L 102 167 Z" fill="#ccccff" stroke="none" />
+
+                <!-- Borders -->
+                <!-- Outer Triangle -->
+                <path d="M 100 10 L 190 170 L 10 170 Z" fill="none" stroke="black" stroke-width="6" stroke-linejoin="round" />
+                <!-- Horizontal Line -->
+                <line x1="53" y1="90" x2="147" y2="90" stroke="black" stroke-width="4" />
+                <!-- Vertical Line -->
+                <line x1="100" y1="90" x2="100" y2="170" stroke="black" stroke-width="4" />
+
+                <!-- Labels -->
+                <text x="100" y="70" text-anchor="middle" class="variable voltage" id="tri-voltage">V</text>
+                <text x="65" y="150" text-anchor="middle" class="variable current" id="tri-current">I</text>
+                <text x="135" y="150" text-anchor="middle" class="variable resistance" id="tri-resistance">R</text>
+            </svg>
         </div>
 
         <!-- Simulation Area -->

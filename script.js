@@ -15,14 +15,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const resistorGroup = document.getElementById('resistor-group');
     const currentArrowsGroup = document.getElementById('current-arrows');
 
+    // Triangle View Elements
+    const viewToggleBtn = document.getElementById('view-toggle-btn');
+    const equationView = document.getElementById('equation-view');
+    const triangleView = document.getElementById('triangle-view');
+
+    const triVoltage = document.getElementById('tri-voltage');
+    const triCurrent = document.getElementById('tri-current');
+    const triResistance = document.getElementById('tri-resistance');
+
     // Constants for visual scaling
     const MIN_FONT_SIZE = 20;
     const MAX_FONT_SIZE = 120; // Max size for V
+
+    // Triangle font scaling (smaller range due to space)
+    const TRI_MIN_FONT = 14;
+    const TRI_MAX_FONT = 48;
 
     // State
     let voltage = 4.5;
     let resistance = 500;
     let current = 0; // Amps
+    let isTriangleView = false;
 
     function updateCalculation() {
         // Ohm's Law: I = V / R
@@ -49,36 +63,62 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateEquationSizes() {
-        // Scale V font size based on voltage (0.1 - 9.0)
-        // Linear interpolation: size = min + (val - minVal) * (max - min) / (maxVal - minVal)
+        // Calculate scales
+        // Voltage (0.1 - 9.0)
         const vScale = (voltage - 0.1) / (9.0 - 0.1);
-        const vSize = MIN_FONT_SIZE + vScale * (MAX_FONT_SIZE - MIN_FONT_SIZE);
-        voltageLabel.style.fontSize = `${vSize}px`;
 
-        // Scale R font size based on resistance (10 - 1000)
+        // Resistance (10 - 1000)
         const rScale = (resistance - 10) / (1000 - 10);
-        const rSize = MIN_FONT_SIZE + rScale * (MAX_FONT_SIZE - MIN_FONT_SIZE);
-        resistanceLabel.style.fontSize = `${rSize}px`;
 
-        // Scale I font size based on current
-        // Use logarithmic scale because current range is large (0.1mA to 900mA)
-        // Min current ~ 0.1mA (0.0001 A) -> log10 = -4
-        // Max current ~ 900mA (0.9 A) -> log10 ≈ -0.045
-        // Let's set a floor for log calculation to avoid -Infinity
+        // Current (log scale)
         const safeCurrent = Math.max(current, 0.0001);
         const logCurrent = Math.log10(safeCurrent);
-
         const minLog = -4; // log10(0.0001)
         const maxLog = 0;  // log10(1.0) approx max
-
         let iScale = (logCurrent - minLog) / (maxLog - minLog);
-        // Clamp
         if (iScale < 0) iScale = 0;
         if (iScale > 1) iScale = 1;
 
-        const iSize = MIN_FONT_SIZE + iScale * (MAX_FONT_SIZE - MIN_FONT_SIZE);
-        currentLabel.style.fontSize = `${iSize}px`;
+        // Apply to Standard Equation View
+        if (!isTriangleView) {
+            const vSize = MIN_FONT_SIZE + vScale * (MAX_FONT_SIZE - MIN_FONT_SIZE);
+            voltageLabel.style.fontSize = `${vSize}px`;
+
+            const rSize = MIN_FONT_SIZE + rScale * (MAX_FONT_SIZE - MIN_FONT_SIZE);
+            resistanceLabel.style.fontSize = `${rSize}px`;
+
+            const iSize = MIN_FONT_SIZE + iScale * (MAX_FONT_SIZE - MIN_FONT_SIZE);
+            currentLabel.style.fontSize = `${iSize}px`;
+        } else {
+            // Apply to Triangle View
+            const vSize = TRI_MIN_FONT + vScale * (TRI_MAX_FONT - TRI_MIN_FONT);
+            triVoltage.style.fontSize = `${vSize}px`;
+
+            const rSize = TRI_MIN_FONT + rScale * (TRI_MAX_FONT - TRI_MIN_FONT);
+            triResistance.style.fontSize = `${rSize}px`;
+
+            const iSize = TRI_MIN_FONT + iScale * (TRI_MAX_FONT - TRI_MIN_FONT);
+            triCurrent.style.fontSize = `${iSize}px`;
+        }
     }
+
+    // Toggle View Handler
+    viewToggleBtn.addEventListener('click', () => {
+        isTriangleView = !isTriangleView;
+
+        if (isTriangleView) {
+            equationView.classList.add('hidden');
+            triangleView.classList.remove('hidden');
+            viewToggleBtn.textContent = "Switch to V=IR View";
+        } else {
+            equationView.classList.remove('hidden');
+            triangleView.classList.add('hidden');
+            viewToggleBtn.textContent = "Switch to Triangle View";
+        }
+
+        // Force update to apply font sizes to the new view
+        updateEquationSizes();
+    });
 
     function updateBattery() {
         // Clear existing battery parts
