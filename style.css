@@ -1,20 +1,49 @@
 :root {
-    --color-voltage: #5c5cff; /* Blueish */
-    --color-current: #ff3333; /* Redish */
-    --color-resistance: #000000; /* Black */
-    --bg-color: #ffffee; /* Light cream background like PhET */
+    --color-voltage: #5c5cff;
+    /* Blueish */
+    --color-current: #ff3333;
+    /* Redish */
+    --color-resistance: #000000;
+    /* Black */
+    --bg-color: #F5F5F5;
+    /* Light gray background */
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Barlow', sans-serif;
     background-color: var(--bg-color);
     margin: 0;
     padding: 0;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
     height: 100vh;
     overflow: hidden;
+}
+
+.app-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    width: 100%;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    background-color: var(--bg-color);
+    z-index: 10;
+}
+
+.app-logo {
+    height: 50px;
+    object-fit: contain;
+}
+
+.app-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+    color: #333;
+    text-align: center;
 }
 
 .main-container {
@@ -24,6 +53,7 @@ body {
     width: 900px;
     height: 600px;
     position: relative;
+    margin: auto;
 }
 
 /* Equation Display */
@@ -32,7 +62,8 @@ body {
     align-items: center;
     justify-content: center;
     margin-bottom: 20px;
-    height: 150px; /* Fixed height to accommodate growing letters */
+    height: 150px;
+    /* Fixed height to accommodate growing letters */
 }
 
 .equation-part {
@@ -54,9 +85,17 @@ body {
     transition: font-size 0.1s ease-out;
 }
 
-.voltage { color: var(--color-voltage); }
-.current { color: var(--color-current); }
-.resistance { color: var(--color-resistance); }
+.voltage {
+    color: var(--color-voltage);
+}
+
+.current {
+    color: var(--color-current);
+}
+
+.resistance {
+    color: var(--color-resistance);
+}
 
 /* Simulation Area */
 .simulation-area {
@@ -68,7 +107,8 @@ body {
 .circuit-container {
     flex: 2;
     position: relative;
-    border: 1px solid #ccc; /* Temporary debug border, maybe remove later */
+    border: 1px solid #ccc;
+    /* Temporary debug border, maybe remove later */
     background-color: white;
     border-radius: 10px;
     margin-right: 20px;
@@ -88,9 +128,17 @@ body {
     border-radius: 4px;
 }
 
-.voltage-value { color: var(--color-voltage); }
-.resistance-value { color: var(--color-resistance); }
-.current-value { color: var(--color-current); }
+.voltage-value {
+    color: var(--color-voltage);
+}
+
+.resistance-value {
+    color: var(--color-resistance);
+}
+
+.current-value {
+    color: var(--color-current);
+}
 
 /* Controls */
 .controls-container {
@@ -124,8 +172,10 @@ body {
 
 /* Vertical Slider Styling */
 input[type=range][orient=vertical] {
-    writing-mode: bt-lr; /* IE */
-    -webkit-appearance: slider-vertical; /* WebKit */
+    writing-mode: bt-lr;
+    /* IE */
+    -webkit-appearance: slider-vertical;
+    /* WebKit */
     width: 8px;
     height: 100%;
     padding: 0 5px;
@@ -138,6 +188,7 @@ input[type=range][orient=vertical] {
 .battery-plate {
     fill: #333;
 }
+
 .battery-terminal {
     fill: #666;
 }

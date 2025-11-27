@@ -4,9 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ohm's Law</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <header class="app-header">
+        <div class="logo-container">
+            <img src="SL_Full_B.png" alt="Logo" class="app-logo">
+        </div>
+        <div class="title-container">
+            <h1 class="app-title">Ohm's Law Interactive Game</h1>
+        </div>
+        <div class="header-spacer"></div>
+    </header>
     <div class="main-container">
         <!-- Equation Display -->
         <div class="equation-container">
@@ -28,16 +40,16 @@
             <div class="circuit-container">
                 <svg id="circuit-svg" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
                     <!-- Wires -->
-                    <path d="M 50 200 L 50 50 L 550 50 L 550 200" class="wire" fill="none" stroke="#555" stroke-width="8" />
-                    <path d="M 50 200 L 50 350 L 550 350 L 550 200" class="wire" fill="none" stroke="#555" stroke-width="8" />
+                    <path d="M 50 125 L 50 50 L 550 50 L 550 125" class="wire" fill="none" stroke="#555" stroke-width="8" />
+                    <path d="M 50 275 L 50 350 L 550 350 L 550 275" class="wire" fill="none" stroke="#555" stroke-width="8" />
                     
                     <!-- Battery Group -->
-                    <g id="battery-group" transform="translate(50, 275)">
+                    <g id="battery-group" transform="translate(50, 200)">
                         <!-- Batteries will be dynamically added here -->
                     </g>
 
                     <!-- Resistor Group -->
-                    <g id="resistor-group" transform="translate(550, 275)">
+                    <g id="resistor-group" transform="translate(550, 200)">
                         <!-- Resistor body -->
                         <rect x="-20" y="-75" width="40" height="150" fill="#f0f0f0" stroke="#333" stroke-width="2" />
                         <!-- Dots will be dynamically added here -->
@@ -50,10 +62,10 @@
                 </svg>
                 
                 <!-- Value Labels on Circuit -->
-                <div class="circuit-label voltage-value" style="left: 80px; top: 275px;">
+                <div class="circuit-label voltage-value" style="left: 80px; top: 200px;">
                     <span id="voltage-display">4.5</span> V
                 </div>
-                <div class="circuit-label resistance-value" style="right: 80px; top: 275px;">
+                <div class="circuit-label resistance-value" style="right: 80px; top: 200px;">
                     <span id="resistance-display">500</span> &Omega;
                 </div>
                 <div class="circuit-label current-value" style="left: 300px; top: 30px;">

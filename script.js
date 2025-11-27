@@ -95,6 +95,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const cellSpacing = 5;
         const totalHeight = numCells * cellHeight + (numCells - 1) * cellSpacing;
         const startY = -totalHeight / 2;
+        const endY = totalHeight / 2;
+
+        // Draw connecting leads from wire gap to battery terminals
+        // Wire gap is from -75 to +75 (relative to center 200)
+        // Top lead: from -75 to startY
+        const topLead = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        topLead.setAttribute("x1", 0);
+        topLead.setAttribute("y1", -75);
+        topLead.setAttribute("x2", 0);
+        topLead.setAttribute("y2", startY);
+        topLead.setAttribute("stroke", "#555"); // Wire color
+        topLead.setAttribute("stroke-width", "8");
+        batteryGroup.appendChild(topLead);
+
+        // Bottom lead: from endY to 75
+        const bottomLead = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        bottomLead.setAttribute("x1", 0);
+        bottomLead.setAttribute("y1", endY);
+        bottomLead.setAttribute("x2", 0);
+        bottomLead.setAttribute("y2", 75);
+        bottomLead.setAttribute("stroke", "#555"); // Wire color
+        bottomLead.setAttribute("stroke-width", "8");
+        batteryGroup.appendChild(bottomLead);
 
         for (let i = 0; i < numCells; i++) {
             const y = startY + i * (cellHeight + cellSpacing);
