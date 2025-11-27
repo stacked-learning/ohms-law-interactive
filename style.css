@@ -1,0 +1,153 @@
+:root {
+    --color-voltage: #5c5cff; /* Blueish */
+    --color-current: #ff3333; /* Redish */
+    --color-resistance: #000000; /* Black */
+    --bg-color: #ffffee; /* Light cream background like PhET */
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--bg-color);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 900px;
+    height: 600px;
+    position: relative;
+}
+
+/* Equation Display */
+.equation-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    height: 150px; /* Fixed height to accommodate growing letters */
+}
+
+.equation-part {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 10px;
+    min-width: 50px;
+}
+
+.equation-equals {
+    font-size: 48px;
+    font-weight: bold;
+    color: #333;
+}
+
+.variable {
+    font-weight: bold;
+    transition: font-size 0.1s ease-out;
+}
+
+.voltage { color: var(--color-voltage); }
+.current { color: var(--color-current); }
+.resistance { color: var(--color-resistance); }
+
+/* Simulation Area */
+.simulation-area {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.circuit-container {
+    flex: 2;
+    position: relative;
+    border: 1px solid #ccc; /* Temporary debug border, maybe remove later */
+    background-color: white;
+    border-radius: 10px;
+    margin-right: 20px;
+}
+
+#circuit-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.circuit-label {
+    position: absolute;
+    font-size: 18px;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+.voltage-value { color: var(--color-voltage); }
+.resistance-value { color: var(--color-resistance); }
+.current-value { color: var(--color-current); }
+
+/* Controls */
+.controls-container {
+    flex: 1;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: #eee;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}
+
+.control-label {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.slider-wrapper {
+    height: 300px;
+    display: flex;
+    align-items: center;
+}
+
+/* Vertical Slider Styling */
+input[type=range][orient=vertical] {
+    writing-mode: bt-lr; /* IE */
+    -webkit-appearance: slider-vertical; /* WebKit */
+    width: 8px;
+    height: 100%;
+    padding: 0 5px;
+}
+
+/* Customizing range input is tricky cross-browser, 
+   but standard vertical slider should work for MVP */
+
+/* Battery Styling */
+.battery-plate {
+    fill: #333;
+}
+.battery-terminal {
+    fill: #666;
+}
+
+/* Resistor Dots */
+.resistor-dot {
+    fill: black;
+}
+
+/* Current Arrow */
+.current-arrow {
+    fill: var(--color-current);
+}

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ohm's Law</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Equation Display -->
+        <div class="equation-container">
+            <div class="equation-part">
+                <span id="voltage-label" class="variable voltage">V</span>
+            </div>
+            <div class="equation-equals">=</div>
+            <div class="equation-part">
+                <span id="current-label" class="variable current">I</span>
+            </div>
+            <div class="equation-part">
+                <span id="resistance-label" class="variable resistance">R</span>
+            </div>
+        </div>
+
+        <!-- Simulation Area -->
+        <div class="simulation-area">
+            <!-- Circuit Diagram (SVG) -->
+            <div class="circuit-container">
+                <svg id="circuit-svg" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Wires -->
+                    <path d="M 50 200 L 50 50 L 550 50 L 550 200" class="wire" fill="none" stroke="#555" stroke-width="8" />
+                    <path d="M 50 200 L 50 350 L 550 350 L 550 200" class="wire" fill="none" stroke="#555" stroke-width="8" />
+                    
+                    <!-- Battery Group -->
+                    <g id="battery-group" transform="translate(50, 275)">
+                        <!-- Batteries will be dynamically added here -->
+                    </g>
+
+                    <!-- Resistor Group -->
+                    <g id="resistor-group" transform="translate(550, 275)">
+                        <!-- Resistor body -->
+                        <rect x="-20" y="-75" width="40" height="150" fill="#f0f0f0" stroke="#333" stroke-width="2" />
+                        <!-- Dots will be dynamically added here -->
+                    </g>
+                    
+                    <!-- Current Arrows Group -->
+                    <g id="current-arrows">
+                        <!-- Arrows will be dynamically added/animated here -->
+                    </g>
+                </svg>
+                
+                <!-- Value Labels on Circuit -->
+                <div class="circuit-label voltage-value" style="left: 80px; top: 275px;">
+                    <span id="voltage-display">4.5</span> V
+                </div>
+                <div class="circuit-label resistance-value" style="right: 80px; top: 275px;">
+                    <span id="resistance-display">500</span> &Omega;
+                </div>
+                <div class="circuit-label current-value" style="left: 300px; top: 30px;">
+                    <span id="current-display">9.0</span> mA
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls-container">
+                <!-- Voltage Control -->
+                <div class="control-group voltage-control">
+                    <label for="voltage-slider" class="control-label voltage">Voltage (V)</label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="voltage-slider" min="0.1" max="9.0" step="0.1" value="4.5" orient="vertical">
+                    </div>
+                </div>
+
+                <!-- Resistance Control -->
+                <div class="control-group resistance-control">
+                    <label for="resistance-slider" class="control-label resistance">Resistance (R)</label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="resistance-slider" min="10" max="1000" step="1" value="500" orient="vertical">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
