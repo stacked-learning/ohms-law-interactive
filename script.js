@@ -1,8 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
-    const voltageSlider = document.getElementById('voltage-slider');
-    const resistanceSlider = document.getElementById('resistance-slider');
-
     const voltageLabel = document.getElementById('voltage-label');
     const currentLabel = document.getElementById('current-label');
     const resistanceLabel = document.getElementById('resistance-label');
@@ -131,56 +128,98 @@ document.addEventListener('DOMContentLoaded', () => {
         // Max 9V -> 6 cells roughly
         const numCells = Math.max(1, Math.ceil(voltage / 1.5));
 
-        const cellHeight = 20;
+        const cellWidth = 40; // Wider for horizontal realistic look
+        const cellHeight = 26;
+        const terminalWidth = 6;
+        const terminalHeight = 10;
         const cellSpacing = 5;
-        const totalHeight = numCells * cellHeight + (numCells - 1) * cellSpacing;
-        const startY = -totalHeight / 2;
-        const endY = totalHeight / 2;
+        const totalWidth = numCells * (cellWidth + terminalWidth) + (numCells - 1) * cellSpacing;
+        const startX = -totalWidth / 2;
 
         // Draw connecting leads from wire gap to battery terminals
-        // Wire gap is from -75 to +75 (relative to center 200)
-        // Top lead: from -75 to startY
-        const topLead = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        topLead.setAttribute("x1", 0);
-        topLead.setAttribute("y1", -75);
-        topLead.setAttribute("x2", 0);
-        topLead.setAttribute("y2", startY);
-        topLead.setAttribute("stroke", "#555"); // Wire color
-        topLead.setAttribute("stroke-width", "8");
-        batteryGroup.appendChild(topLead);
+        // Wire gap (horizontal) in index.html is from x=225 to x=375 relative to svg.
+        // Group is at 300, 350. so gap relative to group is -75 to +75.
 
-        // Bottom lead: from endY to 75
-        const bottomLead = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        bottomLead.setAttribute("x1", 0);
-        bottomLead.setAttribute("y1", endY);
-        bottomLead.setAttribute("x2", 0);
-        bottomLead.setAttribute("y2", 75);
-        bottomLead.setAttribute("stroke", "#555"); // Wire color
-        bottomLead.setAttribute("stroke-width", "8");
-        batteryGroup.appendChild(bottomLead);
+        // Left lead (to negative of first battery on left)
+        const leftLead = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        leftLead.setAttribute("x1", -75);
+        leftLead.setAttribute("y1", 0);
+        leftLead.setAttribute("x2", startX);
+        leftLead.setAttribute("y2", 0);
+        leftLead.setAttribute("stroke", "#555");
+        leftLead.setAttribute("stroke-width", "8");
+        batteryGroup.appendChild(leftLead);
+
+        // Right lead (to positive of last battery on right)
+        const rightLead = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        rightLead.setAttribute("x1", startX + totalWidth); // End of last cell
+        rightLead.setAttribute("y1", 0);
+        rightLead.setAttribute("x2", 75);
+        rightLead.setAttribute("y2", 0);
+        rightLead.setAttribute("stroke", "#555");
+        rightLead.setAttribute("stroke-width", "8");
+        batteryGroup.appendChild(rightLead);
 
         for (let i = 0; i < numCells; i++) {
-            const y = startY + i * (cellHeight + cellSpacing);
+            // Stack left to right?
+            // Batteries usually oriented + to -.
+            // Let's say Left is Negative (Flat), Right is Positive (Button).
+            // So we draw cells: [Body | Button] [Body | Button]
 
-            // Positive terminal (longer line)
-            const posLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            posLine.setAttribute("x1", -20);
-            posLine.setAttribute("y1", y);
-            posLine.setAttribute("x2", 20);
-            posLine.setAttribute("y2", y);
-            posLine.setAttribute("stroke", "#333");
-            posLine.setAttribute("stroke-width", "4");
-            batteryGroup.appendChild(posLine);
+            const cellX = startX + i * (cellWidth + terminalWidth + cellSpacing);
 
-            // Negative terminal (shorter thick line)
-            const negLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            negLine.setAttribute("x1", -10);
-            negLine.setAttribute("y1", y + 10);
-            negLine.setAttribute("x2", 10);
-            negLine.setAttribute("y2", y + 10);
-            negLine.setAttribute("stroke", "#333");
-            negLine.setAttribute("stroke-width", "8");
-            batteryGroup.appendChild(negLine);
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            g.setAttribute("transform", `translate(${cellX}, 0)`);
+
+            // 1. Battery Body (Main cylinder)
+            const bodyX = 0;
+            const bodyY = -cellHeight / 2;
+
+            // Main Body (Grey)
+            const body = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            body.setAttribute("x", bodyX);
+            body.setAttribute("y", bodyY);
+            body.setAttribute("width", cellWidth);
+            body.setAttribute("height", cellHeight);
+            body.setAttribute("fill", "#444"); // Dark Grey
+            body.setAttribute("stroke", "none");
+            body.setAttribute("rx", 3);
+            g.appendChild(body);
+
+            // Orange Band (at positive end, which is right side of body)
+            const bandWidth = 8;
+            const band = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            band.setAttribute("x", bodyX + cellWidth - bandWidth);
+            band.setAttribute("y", bodyY);
+            band.setAttribute("width", bandWidth);
+            band.setAttribute("height", cellHeight);
+            band.setAttribute("fill", "#FFA500"); // Orange
+            g.appendChild(band);
+
+            // Body Border
+            const border = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            border.setAttribute("x", bodyX);
+            border.setAttribute("y", bodyY);
+            border.setAttribute("width", cellWidth);
+            border.setAttribute("height", cellHeight);
+            border.setAttribute("fill", "none");
+            border.setAttribute("stroke", "#222");
+            border.setAttribute("stroke-width", "1");
+            border.setAttribute("rx", 3);
+            g.appendChild(border);
+
+            // 2. Positive Terminal (Button) on Right
+            const terminal = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            terminal.setAttribute("x", bodyX + cellWidth);
+            terminal.setAttribute("y", -terminalHeight / 2);
+            terminal.setAttribute("width", terminalWidth);
+            terminal.setAttribute("height", terminalHeight);
+            terminal.setAttribute("fill", "#C0C0C0"); // Silver
+            terminal.setAttribute("stroke", "#666");
+            terminal.setAttribute("rx", 2);
+            g.appendChild(terminal);
+
+            batteryGroup.appendChild(g);
         }
     }
 
@@ -199,9 +238,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < numDots; i++) {
             const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            // Random position within the resistor rect (-20 to 20 x, -75 to 75 y)
-            const x = (Math.random() * 36) - 18; // slightly padded
-            const y = (Math.random() * 140) - 70;
+            // Random position within the resistor rect 
+            // Rect is width 150, height 40, centered at 0,0 locally?
+            // index.html: <rect x="-75" y="-20" width="150" height="40" ... />
+            const x = (Math.random() * 140) - 70; // -70 to 70
+            const y = (Math.random() * 30) - 15;  // -15 to 15
 
             dot.setAttribute("cx", x);
             dot.setAttribute("cy", y);
@@ -215,26 +256,37 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateCurrentArrows() {
         // Define the motion path if it doesn't exist
         let motionPath = document.getElementById('motion-path');
+        // Always recreate or update path because layout changed
         if (!motionPath) {
             motionPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
             motionPath.setAttribute("id", "motion-path");
-            // Path: Up from battery -> Right -> Down through resistor -> Left -> Up to battery
-            // Battery center is roughly x=50. Top wire y=50. Bottom wire y=350.
-            // Start at (50, 275) - center of battery group
-            // Actually, let's trace the wire path.
-            // Start (50, 200) -> (50, 50) -> (550, 50) -> (550, 200) -> (550, 350) -> (50, 350) -> (50, 200)
-            // But we want continuous loop.
-            const d = "M 50 200 L 50 50 L 550 50 L 550 200 L 550 350 L 50 350 L 50 200";
-            motionPath.setAttribute("d", d);
             motionPath.setAttribute("fill", "none");
-            motionPath.setAttribute("stroke", "none"); // Invisible path
-            // Append to svg, but maybe before arrows?
-            // Actually, it just needs to be in the defs or in the svg.
-            // Let's put it in defs if possible, or just hidden in svg.
+            motionPath.setAttribute("stroke", "none");
             const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
             defs.appendChild(motionPath);
             document.getElementById('circuit-svg').prepend(defs);
         }
+
+        // Path: Clockwise flow?
+        // Battery pushes + charge from + terminal.
+        // Our batteries are Left(-) to Right(+).
+        // So Electron flow (physical) is - to +. (Left to Right through battery? No, out of - into +?)
+        // Conventional current is + to -. (Out of Right, through circuit, into Left).
+        // PhET usually shows Conventional Current by default or Electron Flow.
+        // Let's stick to Conventional Current (Red Arrows): Out of Battery(+) -> Wire -> Resistor -> Battery(-)
+        // Battery + is on Right.
+        // Path: (375, 350) -> (550, 350) -> (550, 50) -> (50, 50) -> (50, 350) -> (225, 350)
+        // Wait, Resistor is at Top.
+        // Start from Battery + (Right side of bottom group ~ 375, 350).
+        // Right to corner (550, 350)
+        // Up to corner (550, 50)
+        // Left through Resistor to corner (50, 50)
+        // Down to corner (50, 350)
+        // Right to Battery - (225, 350)
+        // Through battery to Start?
+
+        const d = "M 375 350 L 550 350 L 550 50 L 50 50 L 50 350 L 225 350 L 375 350";
+        motionPath.setAttribute("d", d);
 
         // Clear existing arrows
         currentArrowsGroup.innerHTML = '';
@@ -315,17 +367,112 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Event Listeners
-    voltageSlider.addEventListener('input', (e) => {
-        voltage = parseFloat(e.target.value);
+    // --- Custom Slider Logic ---
+    function setupSlider(containerId, thumbId, min, max, initialValue, step, callback) {
+        const container = document.getElementById(containerId);
+        const thumb = document.getElementById(thumbId);
+        let value = initialValue;
+
+        // Visual update function
+        function updateSliderAndValue(newValue) {
+            // Clamp
+            if (newValue < min) newValue = min;
+            if (newValue > max) newValue = max;
+
+            // Snap to step
+            if (step) {
+                newValue = Math.round((newValue - min) / step) * step + min;
+            }
+
+            // Re-clamp after snapping
+            if (newValue < min) newValue = min;
+            if (newValue > max) newValue = max;
+
+            value = newValue;
+
+            // Update visuals
+            const percent = (value - min) / (max - min);
+            // Height of container minus height of thumb is drag range
+            // But we can simplify: 0% is bottom, 100% is top.
+            // Thumb is positioned with `bottom: X%`
+            // We need to account for thumb height slightly so it doesn't go out of bounds?
+            // Actually standard approach: 
+            // bottom: calc(percent% - thumbHeight/2)
+            // Or simpler: just percent.
+            thumb.style.bottom = `${percent * 100}%`;
+            // Add a slight transform translate to center it on the point
+            // thumb.style.transform = `translate(-50%, 50%)`; // Already handled in CSS `translate(-50%)` for X. Y needs adjustment?
+            // CSS has:
+            // .slider-thumb {
+            //      transform: translateX(-50%);
+            //      position: absolute; left: 50%;
+            // }
+            // So if we set bottom: 0%, the bottom of thumb is at bottom of track.
+            // if we set bottom: 100%, button of thumb is at top of track.
+            // To center the thumb on the value:
+            // bottom: calc(percent * 100% - 10px); // Assuming 20px height
+            thumb.style.bottom = `calc(${percent * 100}% - 10px)`;
+
+            callback(value);
+        }
+
+        // Mouse/Touch Handling
+        function handleDrag(clientY) {
+            const rect = container.getBoundingClientRect();
+            // 0 at bottom, Height at top
+            // clientY grows downwards.
+            // dist from bottom = rect.bottom - clientY
+            let dist = rect.bottom - clientY;
+            let percent = dist / rect.height;
+
+            // Clamp visual logic handled in updateSliderAndValue check?
+            // No, we want raw percent here.
+
+            let newValue = min + percent * (max - min);
+            updateSliderAndValue(newValue);
+        }
+
+        function startDrag(e) {
+            e.preventDefault();
+            const getClientY = (evt) => evt.touches ? evt.touches[0].clientY : evt.clientY;
+
+            handleDrag(getClientY(e)); // Initial jump to click position
+
+            function onMove(evt) {
+                handleDrag(getClientY(evt));
+            }
+
+            function onEnd() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onEnd);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend', onEnd);
+            }
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+        }
+
+        container.addEventListener('mousedown', startDrag);
+        container.addEventListener('touchstart', startDrag, { passive: false });
+
+        // Initial setup
+        updateSliderAndValue(initialValue);
+    }
+
+    // Setup Sliders
+    setupSlider('voltage-slider-container', 'voltage-slider-thumb', 0.1, 9.0, 4.5, 0.1, (val) => {
+        voltage = val;
         updateCalculation();
     });
 
-    resistanceSlider.addEventListener('input', (e) => {
-        resistance = parseInt(e.target.value);
+    setupSlider('resistance-slider-container', 'resistance-slider-thumb', 10, 1000, 500, 1, (val) => {
+        resistance = val;
         updateCalculation();
     });
 
-    // Initial render
-    updateCalculation();
+    // Initial Circuit Update
+    updateCalculation(); // This was the fix!
 });
