@@ -61,8 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateEquationSizes() {
         // Calculate scales
-        // Voltage (0.1 - 9.0)
-        const vScale = (voltage - 0.1) / (9.0 - 0.1);
+        // Voltage (0 - 9.0)
+        let vScale = (voltage - 0.1) / (9.0 - 0.1);
+        vScale = Math.max(0, Math.min(1, vScale));
 
         // Resistance (10 - 1000)
         const rScale = (resistance - 10) / (1000 - 10);
@@ -121,26 +122,79 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clear existing battery parts
         batteryGroup.innerHTML = '';
 
-        // Determine number of cells based on voltage
-        // 0-1.5V: 1 cell
-        // 1.5-3.0V: 2 cells
-        // ...
-        // Max 9V -> 6 cells roughly
-        const numCells = Math.max(1, Math.ceil(voltage / 1.5));
+        // Clamp voltage and map to cells (1.5V per cell, max 6)
+        const maxVoltage = 9;
+        const clampedVoltage = Math.max(0, Math.min(maxVoltage, voltage));
+        const cellCapacity = 1.5;
+        const maxCells = 6;
+        // Anchor point so the first cell stays put; pack grows to the right (shifted left)
+        const anchorX = -150;
 
-        const cellWidth = 40; // Wider for horizontal realistic look
+        if (clampedVoltage <= 0) {
+            // Show only a tiny battery tip to indicate location
+            const stubWidth = 12;
+            const stubHeight = 16;
+            const stubRadius = 2;
+            const startX = anchorX;
+
+            // Leads into the stub
+            const leftLead = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            leftLead.setAttribute("x1", -75);
+            leftLead.setAttribute("y1", 0);
+            leftLead.setAttribute("x2", startX);
+            leftLead.setAttribute("y2", 0);
+            leftLead.setAttribute("stroke", "#555");
+            leftLead.setAttribute("stroke-width", "8");
+            batteryGroup.appendChild(leftLead);
+
+            const rightLead = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            rightLead.setAttribute("x1", startX + stubWidth);
+            rightLead.setAttribute("y1", 0);
+            rightLead.setAttribute("x2", 75);
+            rightLead.setAttribute("y2", 0);
+            rightLead.setAttribute("stroke", "#555");
+            rightLead.setAttribute("stroke-width", "8");
+            batteryGroup.appendChild(rightLead);
+
+            // The tip itself
+            const tip = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            tip.setAttribute("x", startX);
+            tip.setAttribute("y", -stubHeight / 2);
+            tip.setAttribute("width", stubWidth);
+            tip.setAttribute("height", stubHeight);
+            tip.setAttribute("fill", "#C0C0C0");
+            tip.setAttribute("stroke", "#666");
+            tip.setAttribute("rx", stubRadius);
+            batteryGroup.appendChild(tip);
+            return;
+        }
+
+        // Sizing (full vs. minimal for interpolation)
+        const fullCellWidth = 40;
+        const minCellWidth = 12;
+        const fullTerminalWidth = 6;
+        const minTerminalWidth = 3;
         const cellHeight = 26;
-        const terminalWidth = 6;
         const terminalHeight = 10;
         const cellSpacing = 5;
-        const totalWidth = numCells * (cellWidth + terminalWidth) + (numCells - 1) * cellSpacing;
-        const startX = -totalWidth / 2;
 
-        // Draw connecting leads from wire gap to battery terminals
-        // Wire gap (horizontal) in index.html is from x=225 to x=375 relative to svg.
-        // Group is at 300, 350. so gap relative to group is -75 to +75.
+        const numCells = Math.min(maxCells, Math.ceil(clampedVoltage / cellCapacity));
 
-        // Left lead (to negative of first battery on left)
+        // Build cells with per-cell interpolation (narrow -> wide)
+        const cells = [];
+        for (let i = 0; i < numCells; i++) {
+            const fraction = Math.max(0, Math.min(1, (clampedVoltage - i * cellCapacity) / cellCapacity));
+            const bodyWidth = minCellWidth + (fullCellWidth - minCellWidth) * fraction;
+            const terminalWidth = minTerminalWidth + (fullTerminalWidth - minTerminalWidth) * fraction;
+            const bandWidth = Math.min(bodyWidth, Math.max(3, bodyWidth * 0.2));
+            cells.push({ bodyWidth, terminalWidth, bandWidth });
+        }
+
+        // Allow the pack to grow naturally beyond the wire gap
+        const totalWidth = cells.reduce((sum, c) => sum + c.bodyWidth + c.terminalWidth, 0) + (numCells - 1) * cellSpacing;
+        const startX = anchorX;
+
+        // Leads connecting to the circuit wires
         const leftLead = document.createElementNS("http://www.w3.org/2000/svg", "line");
         leftLead.setAttribute("x1", -75);
         leftLead.setAttribute("y1", 0);
@@ -150,9 +204,8 @@ document.addEventListener('DOMContentLoaded', () => {
         leftLead.setAttribute("stroke-width", "8");
         batteryGroup.appendChild(leftLead);
 
-        // Right lead (to positive of last battery on right)
         const rightLead = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        rightLead.setAttribute("x1", startX + totalWidth); // End of last cell
+        rightLead.setAttribute("x1", startX + totalWidth);
         rightLead.setAttribute("y1", 0);
         rightLead.setAttribute("x2", 75);
         rightLead.setAttribute("y2", 0);
@@ -160,66 +213,65 @@ document.addEventListener('DOMContentLoaded', () => {
         rightLead.setAttribute("stroke-width", "8");
         batteryGroup.appendChild(rightLead);
 
-        for (let i = 0; i < numCells; i++) {
-            // Stack left to right?
-            // Batteries usually oriented + to -.
-            // Let's say Left is Negative (Flat), Right is Positive (Button).
-            // So we draw cells: [Body | Button] [Body | Button]
-
-            const cellX = startX + i * (cellWidth + terminalWidth + cellSpacing);
+        // Draw each cell
+        let currentX = startX;
+        for (const cell of cells) {
+            const bodyWidth = cell.bodyWidth;
+            const terminalWidth = cell.terminalWidth;
+            const bandWidth = cell.bandWidth;
+            const scaledCellHeight = cellHeight;
+            const scaledTerminalHeight = terminalHeight;
+            const cornerRadius = 3;
+            const bodyY = -scaledCellHeight / 2;
 
             const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            g.setAttribute("transform", `translate(${cellX}, 0)`);
+            g.setAttribute("transform", `translate(${currentX}, 0)`);
 
-            // 1. Battery Body (Main cylinder)
-            const bodyX = 0;
-            const bodyY = -cellHeight / 2;
-
-            // Main Body (Grey)
+            // Battery body
             const body = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            body.setAttribute("x", bodyX);
+            body.setAttribute("x", 0);
             body.setAttribute("y", bodyY);
-            body.setAttribute("width", cellWidth);
-            body.setAttribute("height", cellHeight);
-            body.setAttribute("fill", "#444"); // Dark Grey
+            body.setAttribute("width", bodyWidth);
+            body.setAttribute("height", scaledCellHeight);
+            body.setAttribute("fill", "#444");
             body.setAttribute("stroke", "none");
-            body.setAttribute("rx", 3);
+            body.setAttribute("rx", cornerRadius);
             g.appendChild(body);
 
-            // Orange Band (at positive end, which is right side of body)
-            const bandWidth = 8;
+            // Orange band at positive end
             const band = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            band.setAttribute("x", bodyX + cellWidth - bandWidth);
+            band.setAttribute("x", bodyWidth - bandWidth);
             band.setAttribute("y", bodyY);
             band.setAttribute("width", bandWidth);
-            band.setAttribute("height", cellHeight);
-            band.setAttribute("fill", "#FFA500"); // Orange
+            band.setAttribute("height", scaledCellHeight);
+            band.setAttribute("fill", "#FFA500");
             g.appendChild(band);
 
-            // Body Border
+            // Body border
             const border = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            border.setAttribute("x", bodyX);
+            border.setAttribute("x", 0);
             border.setAttribute("y", bodyY);
-            border.setAttribute("width", cellWidth);
-            border.setAttribute("height", cellHeight);
+            border.setAttribute("width", bodyWidth);
+            border.setAttribute("height", scaledCellHeight);
             border.setAttribute("fill", "none");
             border.setAttribute("stroke", "#222");
-            border.setAttribute("stroke-width", "1");
-            border.setAttribute("rx", 3);
+            border.setAttribute("stroke-width", 1);
+            border.setAttribute("rx", cornerRadius);
             g.appendChild(border);
 
-            // 2. Positive Terminal (Button) on Right
+            // Positive terminal
             const terminal = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            terminal.setAttribute("x", bodyX + cellWidth);
-            terminal.setAttribute("y", -terminalHeight / 2);
+            terminal.setAttribute("x", bodyWidth);
+            terminal.setAttribute("y", -scaledTerminalHeight / 2);
             terminal.setAttribute("width", terminalWidth);
-            terminal.setAttribute("height", terminalHeight);
-            terminal.setAttribute("fill", "#C0C0C0"); // Silver
+            terminal.setAttribute("height", scaledTerminalHeight);
+            terminal.setAttribute("fill", "#C0C0C0");
             terminal.setAttribute("stroke", "#666");
             terminal.setAttribute("rx", 2);
             g.appendChild(terminal);
 
             batteryGroup.appendChild(g);
+            currentX += bodyWidth + terminalWidth + cellSpacing;
         }
     }
 
@@ -463,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Setup Sliders
-    setupSlider('voltage-slider-container', 'voltage-slider-thumb', 0.1, 9.0, 4.5, 0.1, (val) => {
+    setupSlider('voltage-slider-container', 'voltage-slider-thumb', 0.0, 9.0, 4.5, 0.1, (val) => {
         voltage = val;
         updateCalculation();
     });

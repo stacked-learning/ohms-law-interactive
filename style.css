@@ -18,8 +18,10 @@ body {
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    height: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .app-header {
@@ -91,8 +93,8 @@ body {
     /* Align left */
     margin-bottom: 5px;
     /* Reduced margin */
-    height: 250px;
-    /* Reduced from 450px to save space */
+    height: clamp(140px, 22vh, 220px);
+    /* Dynamic height to leave more room for the circuit on shorter screens */
     padding-left: 30px;
     /* Reduced padding */
     width: 100%;
@@ -141,8 +143,8 @@ body {
     /* Align left */
     margin-bottom: 5px;
     /* Reduced margin */
-    height: 250px;
-    /* Reduced to match equation height */
+    height: clamp(140px, 22vh, 220px);
+    /* Match equation height */
     padding-left: 30px;
     /* Reduced padding */
     width: 100%;
@@ -202,7 +204,7 @@ body {
 }
 
 .circuit-container {
-    flex: 1;
+    flex: 1 1 380px;
     /* Fill remaining vertical space in left panel */
     position: relative;
     border: 4px solid #1a5c1a;
@@ -218,6 +220,7 @@ body {
     /* No margin needed */
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
     width: 100%;
+    min-height: 380px;
 }
 
 #circuit-svg {
