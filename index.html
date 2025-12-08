@@ -85,14 +85,9 @@
             <div class="circuit-container">
                 <svg id="circuit-svg" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
                     <!-- Wires (Rectangular Loop) -->
-                    <!-- Top wire (with gap for resistor) -->
-                    <path d="M 50 50 L 225 50 M 375 50 L 550 50" class="wire" fill="none" stroke="#555" stroke-width="8" />
-                    <!-- Right wire -->
-                    <path d="M 550 50 L 550 350" class="wire" fill="none" stroke="#555" stroke-width="8" />
-                    <!-- Bottom wire (with gap for battery) -->
-                    <path d="M 550 350 L 375 350 M 225 350 L 50 350" class="wire" fill="none" stroke="#555" stroke-width="8" />
-                    <!-- Left wire -->
-                    <path d="M 50 350 L 50 50" class="wire" fill="none" stroke="#555" stroke-width="8" />
+                    <!-- Wires (gaps for resistor and battery, corners continuous) -->
+                    <path d="M 50 350 L 50 50 L 225 50 M 225 350 L 50 350" class="wire" fill="none" stroke="#555" stroke-width="8" />
+                    <path d="M 375 50 L 550 50 L 550 350 M 550 350 L 375 350" class="wire" fill="none" stroke="#555" stroke-width="8" />
                     
                     <!-- Resistor Group (Top) -->
                     <g id="resistor-group" transform="translate(300, 50)">
@@ -119,8 +114,8 @@
                 <div class="circuit-label resistance-value" style="left: 300px; top: 80px; transform: translateX(-50%);">
                     <span id="resistance-display">500</span> &Omega;
                 </div>
-                <div class="circuit-label current-value" style="left: 560px; top: 200px;">
-                    <span id="current-display">9.0</span> mA
+                <div class="circuit-label current-value" style="left: 50%; top: 50%; transform: translate(-50%, -50%);">
+                    <span class="current-label">Current</span> = <span id="current-display">9.0</span> <span class="current-unit">mA</span>
                 </div>
             </div>
         </div>

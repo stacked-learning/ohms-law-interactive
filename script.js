@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const batteryGroup = document.getElementById('battery-group');
     const resistorGroup = document.getElementById('resistor-group');
     const currentArrowsGroup = document.getElementById('current-arrows');
+    const circuitSvg = document.getElementById('circuit-svg');
 
     // Triangle View Elements
     const viewToggleBtn = document.getElementById('view-toggle-btn');
@@ -34,6 +35,102 @@ document.addEventListener('DOMContentLoaded', () => {
     let resistance = 500;
     let current = 0; // Amps
     let isTriangleView = false;
+    let lastRenderedResistance = null;
+
+    function ensureBatteryGradients() {
+        if (!circuitSvg) return;
+        let defs = document.getElementById('battery-gradients');
+        if (!defs) {
+            defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            defs.setAttribute("id", "battery-gradients");
+            circuitSvg.insertBefore(defs, circuitSvg.firstChild);
+        }
+
+        const addLinearGradient = (id, stops, orientation = 'vertical') => {
+            let grad = document.getElementById(id);
+            if (!grad) {
+                grad = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+                grad.setAttribute("id", id);
+                defs.appendChild(grad);
+            }
+            if (orientation === 'horizontal') {
+                grad.setAttribute("x1", "0%");
+                grad.setAttribute("y1", "0%");
+                grad.setAttribute("x2", "100%");
+                grad.setAttribute("y2", "0%");
+            } else {
+                grad.setAttribute("x1", "0%");
+                grad.setAttribute("y1", "0%");
+                grad.setAttribute("x2", "0%");
+                grad.setAttribute("y2", "100%");
+            }
+            // Clear existing stops before re-adding
+            while (grad.firstChild) grad.removeChild(grad.firstChild);
+            stops.forEach(({ offset, color }) => {
+                const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+                stop.setAttribute("offset", offset);
+                stop.setAttribute("stop-color", color);
+                grad.appendChild(stop);
+            });
+        };
+
+        const addRadialGradient = (id, stops) => {
+            let grad = document.getElementById(id);
+            if (!grad) {
+                grad = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
+                grad.setAttribute("id", id);
+                defs.appendChild(grad);
+            }
+            grad.setAttribute("cx", "50%");
+            grad.setAttribute("cy", "50%");
+            grad.setAttribute("r", "65%");
+            while (grad.firstChild) grad.removeChild(grad.firstChild);
+            stops.forEach(({ offset, color }) => {
+                const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+                stop.setAttribute("offset", offset);
+                stop.setAttribute("stop-color", color);
+                grad.appendChild(stop);
+            });
+        };
+
+        addLinearGradient("battery-body-grad", [
+            { offset: "0%", color: "#1a1a1a" },
+            { offset: "22%", color: "#777" },
+            { offset: "38%", color: "#c0c0c0" },
+            { offset: "58%", color: "#565656" },
+            { offset: "100%", color: "#141414" }
+        ]);
+
+        addLinearGradient("battery-terminal-grad", [
+            { offset: "0%", color: "#7a7a7a" },
+            { offset: "25%", color: "#e6e6e6" },
+            { offset: "42%", color: "#ffffff" },
+            { offset: "60%", color: "#c2c2c2" },
+            { offset: "100%", color: "#7a7a7a" }
+        ]);
+
+        addLinearGradient("battery-band-grad", [
+            { offset: "0%", color: "#8c3e00" },
+            { offset: "25%", color: "#ffb347" },
+            { offset: "45%", color: "#ffd08a" },
+            { offset: "100%", color: "#8c3e00" }
+        ]);
+
+        addLinearGradient("resistor-body-grad", [
+            { offset: "0%", color: "#8b0000" },
+            { offset: "25%", color: "#ff7f7f" },
+            { offset: "50%", color: "#ffffff" },
+            { offset: "75%", color: "#ff7f7f" },
+            { offset: "100%", color: "#8b0000" }
+        ], 'horizontal');
+
+        addRadialGradient("resistor-cap-grad", [
+            { offset: "0%", color: "#ffffff" },
+            { offset: "45%", color: "#ffb3b3" },
+            { offset: "75%", color: "#d40000" },
+            { offset: "100%", color: "#4a0000" }
+        ]);
+    }
 
     function updateCalculation() {
         // Ohm's Law: I = V / R
@@ -47,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Display current in mA (milliAmps)
         const currentMA = current * 1000;
-        currentDisplay.textContent = currentMA.toFixed(1);
+        currentDisplay.textContent = `${currentMA.toFixed(1)}`;
 
         updateVisuals();
     }
@@ -55,7 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateVisuals() {
         updateEquationSizes();
         updateBattery();
-        updateResistor();
+        if (lastRenderedResistance !== resistance) {
+            updateResistor();
+            lastRenderedResistance = resistance;
+        }
         updateCurrentArrows();
     }
 
@@ -121,21 +221,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateBattery() {
         // Clear existing battery parts
         batteryGroup.innerHTML = '';
+        ensureBatteryGradients();
 
         // Clamp voltage and map to cells (1.5V per cell, max 6)
         const maxVoltage = 9;
         const clampedVoltage = Math.max(0, Math.min(maxVoltage, voltage));
         const cellCapacity = 1.5;
         const maxCells = 6;
-        // Anchor point so the first cell stays put; pack grows to the right (shifted left)
-        const anchorX = -150;
+        // Anchor point so the first cell stays put; pack grows to the right (slightly more left)
+        const anchorBase = -170;
 
         if (clampedVoltage <= 0) {
             // Show only a tiny battery tip to indicate location
-            const stubWidth = 12;
-            const stubHeight = 16;
-            const stubRadius = 2;
-            const startX = anchorX;
+            const stubWidth = 16;
+            const stubHeight = 20;
+            const stubRadius = 3;
+            const startX = anchorBase;
 
             // Leads into the stub
             const leftLead = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -162,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tip.setAttribute("y", -stubHeight / 2);
             tip.setAttribute("width", stubWidth);
             tip.setAttribute("height", stubHeight);
-            tip.setAttribute("fill", "#C0C0C0");
+            tip.setAttribute("fill", "url(#battery-terminal-grad)");
             tip.setAttribute("stroke", "#666");
             tip.setAttribute("rx", stubRadius);
             batteryGroup.appendChild(tip);
@@ -170,13 +271,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Sizing (full vs. minimal for interpolation)
-        const fullCellWidth = 40;
-        const minCellWidth = 12;
-        const fullTerminalWidth = 6;
-        const minTerminalWidth = 3;
-        const cellHeight = 26;
-        const terminalHeight = 10;
-        const cellSpacing = 5;
+        const fullCellWidth = 52;
+        const minCellWidth = 18;
+        const fullTerminalWidth = 8;
+        const minTerminalWidth = 4;
+        const cellHeight = 32;
+        const terminalHeight = 14;
+        const cellSpacing = 7;
 
         const numCells = Math.min(maxCells, Math.ceil(clampedVoltage / cellCapacity));
 
@@ -192,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Allow the pack to grow naturally beyond the wire gap
         const totalWidth = cells.reduce((sum, c) => sum + c.bodyWidth + c.terminalWidth, 0) + (numCells - 1) * cellSpacing;
-        const startX = anchorX;
+        const startX = anchorBase; // keep anchor fixed to avoid drifting when expanding
 
         // Leads connecting to the circuit wires
         const leftLead = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -215,7 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Draw each cell
         let currentX = startX;
-        for (const cell of cells) {
+        for (let idx = 0; idx < cells.length; idx++) {
+            const cell = cells[idx];
             const bodyWidth = cell.bodyWidth;
             const terminalWidth = cell.terminalWidth;
             const bandWidth = cell.bandWidth;
@@ -223,6 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const scaledTerminalHeight = terminalHeight;
             const cornerRadius = 3;
             const bodyY = -scaledCellHeight / 2;
+            const cellVoltage = Math.min(cellCapacity, Math.max(0, clampedVoltage - (idx * cellCapacity)));
 
             const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
             g.setAttribute("transform", `translate(${currentX}, 0)`);
@@ -233,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
             body.setAttribute("y", bodyY);
             body.setAttribute("width", bodyWidth);
             body.setAttribute("height", scaledCellHeight);
-            body.setAttribute("fill", "#444");
+            body.setAttribute("fill", "url(#battery-body-grad)");
             body.setAttribute("stroke", "none");
             body.setAttribute("rx", cornerRadius);
             g.appendChild(body);
@@ -244,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
             band.setAttribute("y", bodyY);
             band.setAttribute("width", bandWidth);
             band.setAttribute("height", scaledCellHeight);
-            band.setAttribute("fill", "#FFA500");
+            band.setAttribute("fill", "url(#battery-band-grad)");
             g.appendChild(band);
 
             // Body border
@@ -265,10 +368,24 @@ document.addEventListener('DOMContentLoaded', () => {
             terminal.setAttribute("y", -scaledTerminalHeight / 2);
             terminal.setAttribute("width", terminalWidth);
             terminal.setAttribute("height", scaledTerminalHeight);
-            terminal.setAttribute("fill", "#C0C0C0");
+            terminal.setAttribute("fill", "url(#battery-terminal-grad)");
             terminal.setAttribute("stroke", "#666");
             terminal.setAttribute("rx", 2);
             g.appendChild(terminal);
+
+            // Per-cell voltage label
+            const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            label.setAttribute("x", bodyWidth / 2);
+            label.setAttribute("y", bodyY - 8);
+            label.setAttribute("text-anchor", "middle");
+            label.setAttribute("fill", "#fff");
+            label.setAttribute("stroke", "#000");
+            label.setAttribute("stroke-width", "0.6");
+            label.setAttribute("font-family", "'Barlow', sans-serif");
+            label.setAttribute("font-size", "14");
+            label.setAttribute("font-weight", "800");
+            label.textContent = `${cellVoltage.toFixed(1)}V`;
+            g.appendChild(label);
 
             batteryGroup.appendChild(g);
             currentX += bodyWidth + terminalWidth + cellSpacing;
@@ -276,6 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateResistor() {
+        ensureBatteryGradients();
         // Clear existing dots
         // We want to keep the rect, so maybe just clear a group inside resistor-group?
         // Actually, let's just rebuild the dots.
@@ -283,10 +401,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const existingDots = resistorGroup.querySelectorAll('circle');
         existingDots.forEach(dot => dot.remove());
 
+        // Style the base resistor body to look like a glossy red cylinder
+        const bodyRect = resistorGroup.querySelector('rect');
+        if (bodyRect) {
+            bodyRect.setAttribute('fill', 'url(#resistor-body-grad)');
+            bodyRect.setAttribute('stroke', '#2a0000');
+            bodyRect.setAttribute('stroke-width', '2');
+            bodyRect.setAttribute('rx', '20');
+            bodyRect.setAttribute('ry', '20');
+        }
+
+        // Flat capsule look: no protruding end caps, just a rounded pill shape
+        resistorGroup.querySelectorAll('ellipse.resistor-cap').forEach(el => el.remove());
+
         // Number of dots proportional to resistance
         // 10 ohms -> few dots
         // 1000 ohms -> many dots (e.g. 100)
-        const numDots = Math.floor(resistance / 10);
+        const numDots = Math.floor(resistance / 25);
 
         for (let i = 0; i < numDots; i++) {
             const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -299,46 +430,16 @@ document.addEventListener('DOMContentLoaded', () => {
             dot.setAttribute("cx", x);
             dot.setAttribute("cy", y);
             dot.setAttribute("r", 1.5);
-            dot.setAttribute("fill", "black");
+            dot.setAttribute("fill", "#2a0000");
             dot.classList.add("resistor-dot");
             resistorGroup.appendChild(dot);
         }
     }
 
     function updateCurrentArrows() {
-        // Define the motion path if it doesn't exist
-        let motionPath = document.getElementById('motion-path');
-        // Always recreate or update path because layout changed
-        if (!motionPath) {
-            motionPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            motionPath.setAttribute("id", "motion-path");
-            motionPath.setAttribute("fill", "none");
-            motionPath.setAttribute("stroke", "none");
-            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-            defs.appendChild(motionPath);
-            document.getElementById('circuit-svg').prepend(defs);
-        }
-
-        // Path: Clockwise flow?
-        // Battery pushes + charge from + terminal.
-        // Our batteries are Left(-) to Right(+).
-        // So Electron flow (physical) is - to +. (Left to Right through battery? No, out of - into +?)
-        // Conventional current is + to -. (Out of Right, through circuit, into Left).
-        // PhET usually shows Conventional Current by default or Electron Flow.
-        // Let's stick to Conventional Current (Red Arrows): Out of Battery(+) -> Wire -> Resistor -> Battery(-)
-        // Battery + is on Right.
-        // Path: (375, 350) -> (550, 350) -> (550, 50) -> (50, 50) -> (50, 350) -> (225, 350)
-        // Wait, Resistor is at Top.
-        // Start from Battery + (Right side of bottom group ~ 375, 350).
-        // Right to corner (550, 350)
-        // Up to corner (550, 50)
-        // Left through Resistor to corner (50, 50)
-        // Down to corner (50, 350)
-        // Right to Battery - (225, 350)
-        // Through battery to Start?
-
-        const d = "M 375 350 L 550 350 L 550 50 L 50 50 L 50 350 L 225 350 L 375 350";
-        motionPath.setAttribute("d", d);
+        // Path: conventional current (positive to negative) flowing counterclockwise around the loop
+        // Starts at battery + (right side), goes left across bottom, up left, across resistor, down right, back to start.
+        const d = "M 375 350 L 225 350 L 50 350 L 50 50 L 550 50 L 550 350 L 375 350";
 
         // Clear existing arrows
         currentArrowsGroup.innerHTML = '';
@@ -346,71 +447,37 @@ document.addEventListener('DOMContentLoaded', () => {
         // If current is very small, no arrows
         if (current < 0.001) return;
 
-        // Number of arrows proportional to current? 
-        // Or fixed number with variable speed?
-        // PhET seems to have fixed number (maybe 10-15) and speed changes.
-        const numArrows = 20;
+        // Fixed arrow count with speed tightly coupled to current magnitude
+        const numArrows = 28;
 
-        // Calculate duration based on current
-        // Higher current -> faster speed -> lower duration
-        // Max current ~0.9A. Min ~0.0001A.
-        // Let's say max speed takes 2s for full loop. Min speed takes 20s.
-        // Formula: dur = Base / Current?
-        // Let's try: dur = 2 / current (if current is 0.9, dur = 2.2s. If 0.01, dur = 200s - too slow?)
-        // Let's clamp it.
-        // Map current 0.0 - 0.9 to Duration 10s - 1s.
-        // Linear interp?
-        // t = (current - min) / (max - min)
-        // dur = maxDur - t * (maxDur - minDur)
-        const minDur = 1.5; // seconds at max current
-        const maxDur = 10; // seconds at min current
-        const maxCurrent = 0.9;
-        const minCurrent = 0.0; // effectively
-
-        let t = (current - minCurrent) / (maxCurrent - minCurrent);
-        if (t > 1) t = 1;
-        if (t < 0) t = 0;
-
-        // Non-linear feel might be better, but linear for now.
-        // Actually, current is I = V/R.
-        // 9V / 10ohm = 0.9A.
-        // 0.1V / 1000ohm = 0.0001A.
-        // At 0.0001A, it should be barely moving.
-        // So maybe 1/current is better?
-        // dur = 1 / current. At 0.9A -> 1.1s. At 0.1A -> 10s. At 0.01A -> 100s.
-        // This feels physically correct (velocity proportional to current).
-        // Let's cap the max duration so it's not infinite.
-        let duration = 1.5 / current;
-        if (duration > 60) duration = 60; // Max 60s for full loop
+        // Map current to duration with a predictable scale:
+        // duration = (maxCurrent / current) * minDur, clamped to [minDur, maxDur]
+        const maxExpectedCurrent = 0.9; // ~9V / 10Ω
+        const minDur = 0.8;
+        const maxDur = 20;
+        const safeCurrent = Math.max(current, 1e-6);
+        let duration = (maxExpectedCurrent / safeCurrent) * minDur;
+        if (duration < minDur) duration = minDur;
+        if (duration > maxDur) duration = maxDur;
 
         for (let i = 0; i < numArrows; i++) {
             const arrowGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
             // Arrow shape (triangle)
             const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-            arrow.setAttribute("points", "-6,-4 6,0 -6,4"); // Pointing right
+            arrow.setAttribute("points", "-7,-4 7,0 -7,4"); // Pointing right
             arrow.setAttribute("fill", "red");
+            arrow.setAttribute("stroke", "none");
+            arrow.classList.add("current-arrow");
             arrowGroup.appendChild(arrow);
 
-            // Animate motion
+            // Animate motion directly via path attribute (avoids mpath compatibility issues)
             const animate = document.createElementNS("http://www.w3.org/2000/svg", "animateMotion");
-            animate.setAttribute("href", "#motion-path"); // This might not work directly in all browsers if href is not supported on element, need xlink:href or just parent it.
-            // Actually, putting animateMotion INSIDE the element to be animated is standard.
-            // We need to reference the path.
-
-            // mpath element
-            const mpath = document.createElementNS("http://www.w3.org/2000/svg", "mpath");
-            mpath.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#motion-path");
-            animate.appendChild(mpath);
-
+            animate.setAttribute("path", d);
             animate.setAttribute("dur", `${duration}s`);
             animate.setAttribute("repeatCount", "indefinite");
             animate.setAttribute("rotate", "auto");
 
-            // Stagger start times
-            // We want them evenly spaced.
-            // begin = - (i / numArrows) * duration
-            // Negative begin time starts animation immediately at that offset.
             const offset = (i / numArrows) * duration;
             animate.setAttribute("begin", `-${offset}s`);
 
